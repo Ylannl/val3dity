@@ -56,11 +56,31 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty )
 FILE(GLOB_RECURSE THIRDPARTY thirdparty/*.cpp)
 add_library(thirdparty STATIC ${THIRDPARTY})
 
-FILE(GLOB SRC_FILES src/*.cpp)
-add_executable(val3dity ${SRC_FILES})
-
+# FILE(GLOB SRC_FILES src/*.cpp)
+add_library(val3dity STATIC
+  src/CityObject.cpp
+  src/CompositeSolid.cpp
+  src/CompositeSurface.cpp
+  src/Feature.cpp
+  src/GenericObject.cpp
+  src/GeometryTemplate.cpp
+  src/geomtools.cpp
+  src/IndoorGraph.cpp
+  src/IndoorModel.cpp
+  src/input.cpp
+  # src/main.cpp
+  src/MultiSolid.cpp
+  src/MultiSurface.cpp
+  src/Primitive.cpp
+  src/Solid.cpp
+  src/Surface.cpp
+  src/validate_prim_toporel.cpp
+  src/validate_shell.cpp
+)
+set_property(TARGET thirdparty PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET val3dity PROPERTY POSITION_INDEPENDENT_CODE ON)
 # add_to_cached_list( CGAL_EXECUTABLE_TARGETS val3dity )
-
+target_include_directories(val3dity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(val3dity ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${GEOS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} thirdparty)
 
 install(TARGETS val3dity DESTINATION bin)
