@@ -34,7 +34,7 @@
 #include <fstream>
 #include <string>
 #include "pugixml/pugixml.hpp"
-#include "nlohmann-json/json.hpp"
+#include "geoflow/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 

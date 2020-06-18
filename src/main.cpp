@@ -39,7 +39,7 @@
 
 #include <tclap/CmdLine.h>
 #include <time.h>  
-#include "nlohmann-json/json.hpp"
+#include "geoflow/nlohmann/json.hpp"
 #include <boost/filesystem.hpp>
 
 using namespace std;
