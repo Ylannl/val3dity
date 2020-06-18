@@ -44,14 +44,14 @@ if ( NOT Boost_FOUND )
 endif()
 
 # GEOS
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package( GEOS )
 if ( NOT GEOS_FOUND )
   message(SEND_ERROR "val3dity requires the GEOS library")
 endif()
 
 include_directories( ${GEOS_INCLUDE_DIR} )
-include_directories( ${CMAKE_SOURCE_DIR}/thirdparty )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty )
 
 FILE(GLOB_RECURSE THIRDPARTY thirdparty/*.cpp)
 add_library(thirdparty STATIC ${THIRDPARTY})
