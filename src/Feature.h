@@ -61,8 +61,10 @@ public:
   int                     number_of_primitives();
 
   void                    add_error(int code, std::string info, std::string whichgeoms);
+  void                    add_error_point(const Point3&& p);
   json                    get_report_json();
   std::set<int>           get_unique_error_codes();
+  const std::vector<Point3>& get_error_points() const;
 
 protected:
   int                     _is_valid; 
@@ -73,6 +75,7 @@ protected:
   bool                    validate_generic(double tol_planarity_d2p, double tol_planarity_normals, double tol_overlap = -1);  
   
   std::map<int, std::vector< std::tuple< std::string, std::string > > > _errors;
+  std::vector<Point3> _error_points;
 
 };
 

@@ -698,6 +698,7 @@ bool Surface::does_self_intersect()
       st << c.z();
       st << ")"; 
       this->add_error(306, "", st.str());
+      this->add_error_point(Point3(c.x(), c.y(), c.z()));
     }
     return false;
   }
@@ -754,6 +755,7 @@ bool Surface::validate_as_shell(double tol_planarity_d2p, double tol_planarity_n
               st << he->vertex()->point().z();
               st << ")";
               this->add_error(302, "", st.str());
+              this->add_error_point(Point3(he->vertex()->point().x(), he->vertex()->point().y(), he->vertex()->point().z()));
               st.str("");
               _polyhedron->fill_hole(he);
               _polyhedron->normalize_border();
