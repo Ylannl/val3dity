@@ -152,10 +152,6 @@ void Feature::add_error(int code, std::string whichgeoms, std::string info)
     std::clog << "\t[" << info << "]" << std::endl;
 }
 
-void Feature::add_error_point(const Point3&& p) {
-  _error_points.push_back(p);
-}
-
 std::set<int> Feature::get_unique_error_codes()
 {
   std::set<int> errs;
@@ -167,10 +163,6 @@ std::set<int> Feature::get_unique_error_codes()
     for (auto& each : p->get_unique_error_codes())
       errs.insert(each);
   return errs;
-}
-
-const std::vector<Point3>& Feature::get_error_points() const {
-  return _error_points;
 }
 
 } // namespace val3dity

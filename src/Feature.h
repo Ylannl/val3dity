@@ -75,7 +75,6 @@ protected:
   bool                    validate_generic(double tol_planarity_d2p, double tol_planarity_normals, double tol_overlap = -1);  
   
   std::map<int, std::vector< std::tuple< std::string, std::string > > > _errors;
-  std::vector<Point3> _error_points;
 
 };
 

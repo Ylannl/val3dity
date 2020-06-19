@@ -93,6 +93,10 @@ void Surface::add_error(int code, std::string faceid, std::string info)
     std::clog << "\t[" << info << "]" << std::endl;
 }
 
+void Surface::add_error_point(const Point3&& p) {
+  _error_points.push_back(p);
+}
+
 std::set<int> Surface::get_unique_error_codes()
 {
   std::set<int> errs;
@@ -103,6 +107,9 @@ std::set<int> Surface::get_unique_error_codes()
   return errs;
 }
 
+const std::vector<Point3>& Surface::get_error_points() const {
+  return _error_points;
+}
 
 json Surface::get_report_json()
 {

@@ -66,6 +66,7 @@ public:
   void   add_face(std::vector< std::vector<int> > f, std::string id = "");
 
   json          get_report_json();
+
   void          add_error(int code, std::string faceid = "", std::string info = "");
   bool          has_errors();
   std::set<int> get_unique_error_codes();
@@ -73,6 +74,9 @@ public:
   static void   set_translation_min_values(double minx, double miny);
   std::string   get_poly_representation();
   std::string   get_off_representation();
+
+  void                        add_error_point(const Point3&& p);  
+  const std::vector<Point3>&  get_error_points() const;
 
   int           side_of_triangle_surface(Point3& p);
 
@@ -93,6 +97,7 @@ private:
   static double                           _shifty;
 
   std::map<int, std::vector<std::tuple<std::string, std::string> > > _errors;
+  std::vector<Point3> _error_points;
   
   bool validate_2d_primitives(double tol_planarity_d2p, double tol_planarity_normals);
   std::string get_coords_key(Point3* p);
