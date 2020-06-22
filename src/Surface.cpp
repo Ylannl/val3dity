@@ -111,6 +111,18 @@ const std::vector<Point3>& Surface::get_error_points() const {
   return _error_points;
 }
 
+std::vector<std::string> Surface::get_error_face_ids() const {
+  std::vector<std::string> face_ids;
+  for(const auto& [code, msgs] : _errors ) 
+  {
+    for (const auto& [fid, info] : msgs) 
+    {
+      face_ids.push_back(fid);
+    }
+  }
+  return face_ids;
+}
+
 json Surface::get_report_json()
 {
   json j;

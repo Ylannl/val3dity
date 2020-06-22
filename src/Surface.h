@@ -75,8 +75,10 @@ public:
   std::string   get_poly_representation();
   std::string   get_off_representation();
 
-  void                        add_error_point(const Point3&& p);  
+  void                        add_error_point(const Point3&& p);
   const std::vector<Point3>&  get_error_points() const;
+  void                        add_error_face_id(const std::string&& fid);
+  std::vector<std::string>    get_error_face_ids() const;
 
   int           side_of_triangle_surface(Point3& p);
 
@@ -98,6 +100,7 @@ private:
 
   std::map<int, std::vector<std::tuple<std::string, std::string> > > _errors;
   std::vector<Point3> _error_points;
+  std::vector<std::string> _error_face_ids;
   
   bool validate_2d_primitives(double tol_planarity_d2p, double tol_planarity_normals);
   std::string get_coords_key(Point3* p);
