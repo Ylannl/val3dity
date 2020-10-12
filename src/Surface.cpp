@@ -113,11 +113,14 @@ const std::vector<Point3>& Surface::get_error_points() const {
 
 std::vector<std::string> Surface::get_error_face_ids() const {
   std::vector<std::string> face_ids;
-  for(const auto& [code, msgs] : _errors ) 
+  // for(const auto& [code, msgs] : _errors ) 
+  for(auto it = _errors.begin(); it != _errors.end(); ++it ) 
   {
-    for (const auto& [fid, info] : msgs) 
+    auto& msgs = it->second;
+    // for (const auto& [fid, info] : msgs) 
+    for (auto jt = msgs.begin(); jt != msgs.end(); ++jt)
     {
-      face_ids.push_back(fid);
+      face_ids.push_back(std::get<0>(*jt));
     }
   }
   return face_ids;
