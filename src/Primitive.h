@@ -30,7 +30,7 @@
 #define Primitive_h
 
 #include "definitions.h"
-#include "geoflow/nlohmann/json.hpp"
+#include "nlohmann-json/json.hpp"
 #include <map>
 #include <vector>
 #include <set>

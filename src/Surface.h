@@ -30,7 +30,7 @@
 #define Surface_h
 
 #include "definitions.h"
-#include "geoflow/nlohmann/json.hpp"
+#include "nlohmann-json/json.hpp"
 #include <string>
 #include <vector>
 #include <set>

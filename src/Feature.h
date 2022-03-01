@@ -31,7 +31,7 @@
 
 #include "Primitive.h"
 #include "definitions.h"
-#include "geoflow/nlohmann/json.hpp"
+#include "nlohmann-json/json.hpp"
 #include <vector>
 #include <set>
 #include <string>
