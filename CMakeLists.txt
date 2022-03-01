@@ -3,8 +3,6 @@ project( val3dity )
 
 cmake_minimum_required (VERSION 3.2)
 
-add_definitions(-std=c++14)
-
 set( CMAKE_BUILD_TYPE "Release")
 set( CMAKE_CXX_FLAGS "-O2" )
 
@@ -78,7 +76,10 @@ add_library(val3dity STATIC
   src/validate_shell.cpp
 )
 set_property(TARGET thirdparty PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_property(TARGET val3dity PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(val3dity PROPERTIES 
+  CXX_STANDARD 17
+  POSITION_INDEPENDENT_CODE ON
+)
 # add_to_cached_list( CGAL_EXECUTABLE_TARGETS val3dity )
 target_include_directories(val3dity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(val3dity ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${GEOS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} thirdparty)
