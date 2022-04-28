@@ -44,7 +44,7 @@ endif()
 
 # GEOS
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-find_package( GEOS CONFIG REQUIRED )
+find_package( GEOS )
 if ( NOT GEOS_FOUND )
   message(SEND_ERROR "val3dity requires the GEOS library")
 endif()
@@ -83,6 +83,6 @@ set_target_properties(val3dity PROPERTIES
 )
 # add_to_cached_list( CGAL_EXECUTABLE_TARGETS val3dity )
 target_include_directories(val3dity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(val3dity PRIVATE ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} GEOS::geos_c ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} nlohmann_json::nlohmann_json thirdparty)
+target_link_libraries(val3dity ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${GEOS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} nlohmann_json::nlohmann_json thirdparty)
 
 install(TARGETS val3dity DESTINATION bin)
