@@ -83,6 +83,6 @@ set_target_properties(val3dity PROPERTIES
 )
 # add_to_cached_list( CGAL_EXECUTABLE_TARGETS val3dity )
 target_include_directories(val3dity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(val3dity PRIVATE ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} geos ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} nlohmann_json::nlohmann_json thirdparty)
+target_link_libraries(val3dity PRIVATE ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} geos_c ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} nlohmann_json::nlohmann_json thirdparty)
 
 install(TARGETS val3dity DESTINATION bin)
