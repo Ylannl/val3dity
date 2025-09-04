@@ -112,7 +112,10 @@ if ( VAL3DITY_LIBRARY )
     ${CMAKE_CURRENT_SOURCE_DIR}/src/val3dity.cpp
     $<TARGET_OBJECTS:val3dity_core>
   )
-  target_include_directories(val3dity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_include_directories(val3dity PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:include>
+  )
 
   # Propagate dependencies from val3dity_core
   target_link_libraries(val3dity PUBLIC CGAL::CGAL)
@@ -126,7 +129,8 @@ if ( VAL3DITY_LIBRARY )
   set_property(TARGET val3dity PROPERTY POSITION_INDEPENDENT_CODE ON)
 
   # Install headers
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src DESTINATION include/val3dity FILES_MATCHING PATTERN "*.h")
+  file(GLOB VAL3DITY_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+  install(FILES ${VAL3DITY_HEADERS} DESTINATION include/val3dity)
 
   # Create and install cmake config
   include(CMakePackageConfigHelpers)
@@ -163,6 +167,12 @@ if ( VAL3DITY_LIBRARY )
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
       INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  )
+
+  install(EXPORT val3dity-targets
+    FILE val3dity-targets.cmake
+    NAMESPACE val3dity::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/val3dity
   )
 
 else()
