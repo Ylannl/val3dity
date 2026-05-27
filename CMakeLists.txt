@@ -8,6 +8,7 @@ project( val3dity )
 
 option(VAL3DITY_LIBRARY "Build val3dity as a library instead of an executable." OFF)
 option(VAL3DITY_USE_INTERNAL_DEPS "Use the thirdparty dir that ship with val3dity (for pugixml, nlohmann-json, spdlog and tclap). Turn off in case you want to provide these dependencies yourself." ON)
+option(VAL3DITY_WASM "Build Emscripten wasm bindings." OFF)
 
 add_definitions(-std=c++17)
 
@@ -44,7 +45,11 @@ include(CGAL_Eigen3_support)
 
 
 # Boost
-find_package( Boost REQUIRED COMPONENTS filesystem)
+if ( VAL3DITY_WASM )
+  find_package( Boost REQUIRED )
+else()
+  find_package( Boost REQUIRED COMPONENTS filesystem)
+endif()
 
 if ( NOT Boost_FOUND )
   message( SEND_ERROR "val3dity requires the Boost library" )
@@ -113,7 +118,7 @@ if ( VAL3DITY_LIBRARY )
   target_include_directories(val3dity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(val3dity PUBLIC val3dity_core)
   set_property(TARGET val3dity PROPERTY POSITION_INDEPENDENT_CODE ON)
-else()
+elseif ( NOT VAL3DITY_WASM )
   message(STATUS "Building val3dity executable")
   add_executable(val3dity ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
   target_link_libraries(val3dity PRIVATE val3dity_core Boost::filesystem)
@@ -122,4 +127,43 @@ else()
   if ( NOT VAL3DITY_USE_INTERNAL_DEPS )
     target_include_directories(val3dity PRIVATE ${TCLAP_INCLUDE_DIR})
   endif()
+endif()
+
+if ( VAL3DITY_WASM )
+  if ( NOT EMSCRIPTEN )
+    message(FATAL_ERROR "VAL3DITY_WASM requires the Emscripten toolchain. Use emcmake or nix develop .#wasm.")
+  endif()
+
+  message(STATUS "Building val3dity wasm bindings")
+  add_executable(val3dity_wasm
+    ${CMAKE_CURRENT_SOURCE_DIR}/wasm/val3dity_wasm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/val3dity.cpp
+  )
+  target_include_directories(val3dity_wasm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(val3dity_wasm PRIVATE val3dity_core)
+  target_compile_options(val3dity_core PRIVATE "-fexceptions")
+  target_compile_options(val3dity_wasm PRIVATE "-fexceptions")
+  target_link_options(val3dity_wasm PRIVATE
+    "-fexceptions"
+    "--bind"
+    "-sALLOW_MEMORY_GROWTH=1"
+    "-sENVIRONMENT=web,worker,node"
+    "-sEXPORT_ES6=1"
+    "-sEXPORT_NAME=createVal3dityModule"
+    "-sFILESYSTEM=0"
+    "-sMODULARIZE=1"
+  )
+  set_target_properties(val3dity_wasm PROPERTIES
+    OUTPUT_NAME "val3dity_wasm"
+    SUFFIX ".mjs"
+  )
+
+  install(TARGETS val3dity_wasm DESTINATION share/val3dity/wasm)
+  install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/val3dity_wasm.wasm
+    ${CMAKE_CURRENT_SOURCE_DIR}/wasm/demo.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/wasm/val3dity.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/wasm/README.md
+    DESTINATION share/val3dity/wasm
+  )
 endif()

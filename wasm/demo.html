@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>val3dity CityJSON demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --ink: #171a1f;
+        --muted: #69717d;
+        --line: #d9dee6;
+        --accent: #0b6bcb;
+        --good: #087443;
+        --bad: #b42318;
+        --warn-bg: #fff6df;
+        --bad-bg: #fff1f0;
+        --good-bg: #eaf8ef;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.45;
+      }
+
+      main {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 28px 0 40px;
+      }
+
+      header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 720;
+        letter-spacing: 0;
+      }
+
+      .version {
+        color: var(--muted);
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 360px) 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel,
+      .dropzone,
+      .metric,
+      .error-row {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .dropzone {
+        display: grid;
+        place-items: center;
+        min-height: 190px;
+        padding: 24px;
+        border-style: dashed;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .dropzone:focus-within,
+      .dropzone.is-dragover {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 82%);
+      }
+
+      .dropzone input {
+        width: 1px;
+        height: 1px;
+        position: absolute;
+        opacity: 0;
+      }
+
+      .drop-title {
+        display: block;
+        font-weight: 680;
+        margin-bottom: 6px;
+      }
+
+      .drop-subtitle,
+      .hint,
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .status {
+        min-height: 24px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .metric {
+        padding: 14px;
+      }
+
+      .metric-value {
+        display: block;
+        margin-top: 8px;
+        font-size: 24px;
+        font-weight: 760;
+      }
+
+      .valid {
+        color: var(--good);
+      }
+
+      .invalid {
+        color: var(--bad);
+      }
+
+      section + section {
+        margin-top: 18px;
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        font-size: 16px;
+        font-weight: 720;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-weight: 650;
+      }
+
+      .empty {
+        padding: 16px;
+        background: var(--good-bg);
+        border-radius: 8px;
+        color: var(--good);
+      }
+
+      .error-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .error-row {
+        padding: 12px;
+        background: var(--bad-bg);
+      }
+
+      .error-code {
+        display: inline-block;
+        min-width: 58px;
+        font-weight: 760;
+        color: var(--bad);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      details {
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 680;
+      }
+
+      pre {
+        max-height: 520px;
+        overflow: auto;
+        margin: 12px 0 0;
+        padding: 14px;
+        background: #111827;
+        color: #f9fafb;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .banner {
+        margin-bottom: 18px;
+        padding: 12px 14px;
+        background: var(--warn-bg);
+        border: 1px solid #f2d27c;
+        border-radius: 8px;
+        color: #694b00;
+      }
+
+      @media (max-width: 860px) {
+        main {
+          width: min(100vw - 20px, 720px);
+          padding-top: 18px;
+        }
+
+        header,
+        .layout {
+          display: block;
+        }
+
+        .version {
+          display: block;
+          margin-top: 6px;
+        }
+
+        .panel:first-child {
+          margin-bottom: 14px;
+        }
+
+        .summary {
+          grid-template-columns: repeat(2, minmax(120px, 1fr));
+        }
+      }
+
+      @media (max-width: 520px) {
+        .summary {
+          grid-template-columns: 1fr;
+        }
+
+        th:nth-child(3),
+        td:nth-child(3) {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>val3dity CityJSON / CityJSONSeq report</h1>
+        <span class="version" id="version">Wasm module loading</span>
+      </header>
+
+      <div class="layout">
+        <aside class="panel">
+          <label class="dropzone" id="dropzone">
+            <input id="file" type="file" accept=".json,.city.json,.jsonl,.city.jsonl,.cjseq,application/json,application/x-ndjson" />
+            <span>
+              <span class="drop-title">Upload CityJSON or CityJSONSeq</span>
+              <span class="drop-subtitle">Drop a file or select one</span>
+            </span>
+          </label>
+          <div class="status" id="status">Ready</div>
+        </aside>
+
+        <div>
+          <div class="banner hidden" id="errorBanner"></div>
+
+          <section class="summary" aria-label="Report summary">
+            <div class="metric">
+              <span class="meta">Validity</span>
+              <span class="metric-value" id="validity">-</span>
+            </div>
+            <div class="metric">
+              <span class="meta">Features</span>
+              <span class="metric-value" id="featureCount">-</span>
+            </div>
+            <div class="metric">
+              <span class="meta">Primitives</span>
+              <span class="metric-value" id="primitiveCount">-</span>
+            </div>
+            <div class="metric">
+              <span class="meta">Errors</span>
+              <span class="metric-value" id="errorCount">-</span>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Errors</h2>
+            <div id="errors" class="empty">No report loaded.</div>
+          </section>
+
+          <section class="panel">
+            <h2>Overview</h2>
+            <div id="overview" class="hint">No report loaded.</div>
+          </section>
+
+          <section class="panel">
+            <details>
+              <summary>Full JSON report</summary>
+              <pre id="jsonReport">{}</pre>
+            </details>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script type="module">
+      import { createVal3dity } from "./val3dity.js";
+
+      const elements = {
+        dropzone: document.querySelector("#dropzone"),
+        errorBanner: document.querySelector("#errorBanner"),
+        errors: document.querySelector("#errors"),
+        featureCount: document.querySelector("#featureCount"),
+        file: document.querySelector("#file"),
+        jsonReport: document.querySelector("#jsonReport"),
+        overview: document.querySelector("#overview"),
+        primitiveCount: document.querySelector("#primitiveCount"),
+        status: document.querySelector("#status"),
+        validity: document.querySelector("#validity"),
+        version: document.querySelector("#version"),
+        errorCount: document.querySelector("#errorCount"),
+      };
+
+      let val3dityPromise = createVal3dity();
+
+      val3dityPromise
+        .then(() => {
+          elements.version.textContent = "Wasm module ready";
+        })
+        .catch((error) => {
+          showError(`Could not load wasm module: ${error.message}`);
+        });
+
+      elements.file.addEventListener("change", () => {
+        const [file] = elements.file.files;
+        if (file) {
+          validateFile(file);
+        }
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        elements.dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          elements.dropzone.classList.add("is-dragover");
+        });
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        elements.dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          elements.dropzone.classList.remove("is-dragover");
+        });
+      });
+
+      elements.dropzone.addEventListener("drop", (event) => {
+        const [file] = event.dataTransfer.files;
+        if (file) {
+          elements.file.files = event.dataTransfer.files;
+          validateFile(file);
+        }
+      });
+
+      async function validateFile(file) {
+        clearError();
+        elements.status.textContent = `Reading ${file.name}`;
+
+        try {
+          const input = await file.text();
+          const inputKind = detectInputKind(file, input);
+
+          elements.status.textContent = "Validating";
+          const val3dity = await val3dityPromise;
+          const report =
+            inputKind === "cityjsonseq"
+              ? val3dity.validateCityJSONSeq(input)
+              : val3dity.validateCityJSON(input);
+          renderReport(report);
+          elements.status.textContent = `${file.name} validated`;
+        } catch (error) {
+          resetReport();
+          showError(error.message);
+          elements.status.textContent = "Validation failed";
+        }
+      }
+
+      function detectInputKind(file, input) {
+        const filename = file.name.toLowerCase();
+        if (
+          filename.endsWith(".jsonl") ||
+          filename.endsWith(".city.jsonl") ||
+          filename.endsWith(".cjseq")
+        ) {
+          return "cityjsonseq";
+        }
+
+        try {
+          JSON.parse(input);
+          return "cityjson";
+        } catch (_error) {
+          const firstLine = input.split(/\r?\n/).find((line) => line.trim() !== "");
+          if (!firstLine) {
+            throw new Error("Input file is empty.");
+          }
+
+          const firstObject = JSON.parse(firstLine);
+          if (firstObject?.type === "CityJSON" || firstObject?.type === "CityJSONFeature") {
+            return "cityjsonseq";
+          }
+
+          throw _error;
+        }
+      }
+
+      function resetReport() {
+        elements.validity.textContent = "-";
+        elements.validity.className = "metric-value";
+        elements.featureCount.textContent = "-";
+        elements.primitiveCount.textContent = "-";
+        elements.errorCount.textContent = "-";
+        elements.errors.className = "empty";
+        elements.errors.textContent = "No report loaded.";
+        elements.overview.className = "hint";
+        elements.overview.textContent = "No report loaded.";
+        elements.jsonReport.textContent = "{}";
+      }
+
+      function renderReport(report) {
+        const errors = collectErrors(report);
+        const featureTotal = totalFromOverview(report.features_overview) ?? report.features?.length ?? 0;
+        const primitiveTotal = totalFromOverview(report.primitives_overview);
+
+        elements.validity.textContent = report.validity ? "Valid" : "Invalid";
+        elements.validity.className = `metric-value ${report.validity ? "valid" : "invalid"}`;
+        elements.featureCount.textContent = String(featureTotal);
+        elements.primitiveCount.textContent = primitiveTotal == null ? "-" : String(primitiveTotal);
+        elements.errorCount.textContent = String(errors.length);
+        elements.jsonReport.textContent = JSON.stringify(report, null, 2);
+
+        renderErrors(errors);
+        renderOverview(report);
+      }
+
+      function collectErrors(report) {
+        const errors = [];
+        appendErrors(errors, report.errors, "Report");
+        appendErrors(errors, report.dataset_errors, "Dataset");
+        appendErrors(errors, report.all_errors, "All");
+
+        for (const feature of report.features ?? []) {
+          appendErrors(errors, feature.errors, feature.id ?? "Feature");
+          for (const primitive of feature.primitives ?? []) {
+            appendErrors(errors, primitive.errors, `${feature.id ?? "Feature"} / ${primitive.id ?? "Primitive"}`);
+          }
+        }
+
+        return errors;
+      }
+
+      function appendErrors(target, source, scope) {
+        if (!Array.isArray(source)) {
+          return;
+        }
+        for (const error of source) {
+          if (typeof error === "number" || typeof error === "string") {
+            target.push({ code: error, message: "", scope });
+          } else if (error && typeof error === "object") {
+            target.push({
+              code: error.code ?? error.error ?? "-",
+              message: error.message ?? error.description ?? JSON.stringify(error),
+              scope,
+            });
+          }
+        }
+      }
+
+      function renderErrors(errors) {
+        if (errors.length === 0) {
+          elements.errors.className = "empty";
+          elements.errors.textContent = "No errors found.";
+          return;
+        }
+
+        elements.errors.className = "error-list";
+        elements.errors.replaceChildren(
+          ...errors.map((error) => {
+            const row = document.createElement("div");
+            row.className = "error-row";
+
+            const code = document.createElement("span");
+            code.className = "error-code";
+            code.textContent = String(error.code);
+
+            const message = document.createElement("span");
+            message.textContent = `${error.scope}${error.message ? `: ${error.message}` : ""}`;
+
+            row.append(code, message);
+            return row;
+          }),
+        );
+      }
+
+      function renderOverview(report) {
+        const rows = [
+          ...(report.features_overview ?? []).map((row) => ({ group: "Feature", ...row })),
+          ...(report.primitives_overview ?? []).map((row) => ({ group: "Primitive", ...row })),
+        ];
+
+        if (rows.length === 0) {
+          elements.overview.className = "hint";
+          elements.overview.textContent = "No overview available.";
+          return;
+        }
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Type</th>
+              <th>Total</th>
+              <th>Valid</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+
+        const body = table.querySelector("tbody");
+        for (const row of rows) {
+          const tr = document.createElement("tr");
+          tr.append(
+            cell(row.group),
+            cell(row.type ?? "-"),
+            cell(row.total ?? "-"),
+            cell(row.valid ?? "-"),
+          );
+          body.append(tr);
+        }
+
+        elements.overview.className = "";
+        elements.overview.replaceChildren(table);
+      }
+
+      function cell(value) {
+        const td = document.createElement("td");
+        td.textContent = String(value);
+        return td;
+      }
+
+      function totalFromOverview(overview) {
+        if (!Array.isArray(overview)) {
+          return null;
+        }
+        return overview.reduce((sum, row) => sum + Number(row.total ?? 0), 0);
+      }
+
+      function showError(message) {
+        elements.errorBanner.textContent = message;
+        elements.errorBanner.classList.remove("hidden");
+      }
+
+      function clearError() {
+        elements.errorBanner.textContent = "";
+        elements.errorBanner.classList.add("hidden");
+      }
+    </script>
+  </body>
+</html>
