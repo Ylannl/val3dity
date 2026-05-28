@@ -70,8 +70,7 @@
 
       .panel,
       .dropzone,
-      .metric,
-      .error-row {
+      .metric {
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -118,10 +117,28 @@
       }
 
       .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         min-height: 24px;
         margin-top: 14px;
         color: var(--muted);
         font-size: 14px;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--line);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .summary {
@@ -186,35 +203,37 @@
         color: var(--good);
       }
 
-      .error-list {
-        display: grid;
-        gap: 10px;
-      }
-
-      .error-row {
-        padding: 12px;
-        background: var(--bad-bg);
-      }
-
-      .error-code {
-        display: inline-block;
-        min-width: 58px;
-        font-weight: 760;
-        color: var(--bad);
-      }
-
       .hidden {
         display: none !important;
       }
 
-      details {
-        border-top: 1px solid var(--line);
-        padding-top: 14px;
+      .report-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
       }
 
-      summary {
+      .report-heading h2 {
+        margin: 0;
+      }
+
+      .copy-button {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--ink);
         cursor: pointer;
-        font-weight: 680;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 650;
+        padding: 6px 10px;
+      }
+
+      .copy-button:hover,
+      .copy-button:focus-visible {
+        border-color: var(--accent);
+        outline: none;
       }
 
       pre {
@@ -236,6 +255,12 @@
         border: 1px solid #f2d27c;
         border-radius: 8px;
         color: #694b00;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+        }
       }
 
       @media (max-width: 860px) {
@@ -291,7 +316,10 @@
               <span class="drop-subtitle">Drop a file or select one</span>
             </span>
           </label>
-          <div class="status" id="status">Ready</div>
+          <div class="status" id="status">
+            <span class="spinner hidden" id="spinner" aria-hidden="true"></span>
+            <span id="statusText">Ready</span>
+          </div>
         </aside>
 
         <div>
@@ -317,20 +345,16 @@
           </section>
 
           <section class="panel">
-            <h2>Errors</h2>
-            <div id="errors" class="empty">No report loaded.</div>
-          </section>
-
-          <section class="panel">
             <h2>Overview</h2>
             <div id="overview" class="hint">No report loaded.</div>
           </section>
 
           <section class="panel">
-            <details>
-              <summary>Full JSON report</summary>
-              <pre id="jsonReport">{}</pre>
-            </details>
+            <div class="report-heading">
+              <h2>Full JSON report</h2>
+              <button class="copy-button" id="copyReport" type="button">Copy</button>
+            </div>
+            <pre id="jsonReport">{}</pre>
           </section>
         </div>
       </div>
@@ -342,13 +366,15 @@
       const elements = {
         dropzone: document.querySelector("#dropzone"),
         errorBanner: document.querySelector("#errorBanner"),
-        errors: document.querySelector("#errors"),
         featureCount: document.querySelector("#featureCount"),
         file: document.querySelector("#file"),
         jsonReport: document.querySelector("#jsonReport"),
         overview: document.querySelector("#overview"),
         primitiveCount: document.querySelector("#primitiveCount"),
+        copyReport: document.querySelector("#copyReport"),
+        spinner: document.querySelector("#spinner"),
         status: document.querySelector("#status"),
+        statusText: document.querySelector("#statusText"),
         validity: document.querySelector("#validity"),
         version: document.querySelector("#version"),
         errorCount: document.querySelector("#errorCount"),
@@ -368,6 +394,16 @@
         const [file] = elements.file.files;
         if (file) {
           validateFile(file);
+        }
+      });
+
+      elements.copyReport.addEventListener("click", async (event) => {
+        event.preventDefault();
+        try {
+          await navigator.clipboard.writeText(elements.jsonReport.textContent);
+          setStatus("Report copied");
+        } catch (_error) {
+          showError("Could not copy the report.");
         }
       });
 
@@ -395,24 +431,25 @@
 
       async function validateFile(file) {
         clearError();
-        elements.status.textContent = `Reading ${file.name}`;
+        setLoading(true, `Reading ${file.name}`);
 
         try {
           const input = await file.text();
           const inputKind = detectInputKind(file, input);
 
-          elements.status.textContent = "Validating";
+          setLoading(true, "Validating");
+          await nextPaint();
           const val3dity = await val3dityPromise;
           const report =
             inputKind === "cityjsonseq"
               ? val3dity.validateCityJSONSeq(input)
               : val3dity.validateCityJSON(input);
           renderReport(report);
-          elements.status.textContent = `${file.name} validated`;
+          setLoading(false, `${file.name} validated`);
         } catch (error) {
           resetReport();
           showError(error.message);
-          elements.status.textContent = "Validation failed";
+          setLoading(false, "Validation failed");
         }
       }
 
@@ -450,15 +487,12 @@
         elements.featureCount.textContent = "-";
         elements.primitiveCount.textContent = "-";
         elements.errorCount.textContent = "-";
-        elements.errors.className = "empty";
-        elements.errors.textContent = "No report loaded.";
         elements.overview.className = "hint";
         elements.overview.textContent = "No report loaded.";
         elements.jsonReport.textContent = "{}";
       }
 
       function renderReport(report) {
-        const errors = collectErrors(report);
         const featureTotal = totalFromOverview(report.features_overview) ?? report.features?.length ?? 0;
         const primitiveTotal = totalFromOverview(report.primitives_overview);
 
@@ -466,70 +500,10 @@
         elements.validity.className = `metric-value ${report.validity ? "valid" : "invalid"}`;
         elements.featureCount.textContent = String(featureTotal);
         elements.primitiveCount.textContent = primitiveTotal == null ? "-" : String(primitiveTotal);
-        elements.errorCount.textContent = String(errors.length);
+        elements.errorCount.textContent = String(countErrors(report));
         elements.jsonReport.textContent = JSON.stringify(report, null, 2);
 
-        renderErrors(errors);
         renderOverview(report);
-      }
-
-      function collectErrors(report) {
-        const errors = [];
-        appendErrors(errors, report.errors, "Report");
-        appendErrors(errors, report.dataset_errors, "Dataset");
-        appendErrors(errors, report.all_errors, "All");
-
-        for (const feature of report.features ?? []) {
-          appendErrors(errors, feature.errors, feature.id ?? "Feature");
-          for (const primitive of feature.primitives ?? []) {
-            appendErrors(errors, primitive.errors, `${feature.id ?? "Feature"} / ${primitive.id ?? "Primitive"}`);
-          }
-        }
-
-        return errors;
-      }
-
-      function appendErrors(target, source, scope) {
-        if (!Array.isArray(source)) {
-          return;
-        }
-        for (const error of source) {
-          if (typeof error === "number" || typeof error === "string") {
-            target.push({ code: error, message: "", scope });
-          } else if (error && typeof error === "object") {
-            target.push({
-              code: error.code ?? error.error ?? "-",
-              message: error.message ?? error.description ?? JSON.stringify(error),
-              scope,
-            });
-          }
-        }
-      }
-
-      function renderErrors(errors) {
-        if (errors.length === 0) {
-          elements.errors.className = "empty";
-          elements.errors.textContent = "No errors found.";
-          return;
-        }
-
-        elements.errors.className = "error-list";
-        elements.errors.replaceChildren(
-          ...errors.map((error) => {
-            const row = document.createElement("div");
-            row.className = "error-row";
-
-            const code = document.createElement("span");
-            code.className = "error-code";
-            code.textContent = String(error.code);
-
-            const message = document.createElement("span");
-            message.textContent = `${error.scope}${error.message ? `: ${error.message}` : ""}`;
-
-            row.append(code, message);
-            return row;
-          }),
-        );
       }
 
       function renderOverview(report) {
@@ -586,6 +560,22 @@
         return overview.reduce((sum, row) => sum + Number(row.total ?? 0), 0);
       }
 
+      function countErrors(report) {
+        let count = 0;
+        count += Array.isArray(report.errors) ? report.errors.length : 0;
+        count += Array.isArray(report.dataset_errors) ? report.dataset_errors.length : 0;
+        count += Array.isArray(report.all_errors) ? report.all_errors.length : 0;
+
+        for (const feature of report.features ?? []) {
+          count += Array.isArray(feature.errors) ? feature.errors.length : 0;
+          for (const primitive of feature.primitives ?? []) {
+            count += Array.isArray(primitive.errors) ? primitive.errors.length : 0;
+          }
+        }
+
+        return count;
+      }
+
       function showError(message) {
         elements.errorBanner.textContent = message;
         elements.errorBanner.classList.remove("hidden");
@@ -594,6 +584,25 @@
       function clearError() {
         elements.errorBanner.textContent = "";
         elements.errorBanner.classList.add("hidden");
+      }
+
+      function setStatus(message) {
+        elements.statusText.textContent = message;
+      }
+
+      function setLoading(isLoading, message) {
+        elements.spinner.classList.toggle("hidden", !isLoading);
+        elements.file.disabled = isLoading;
+        elements.copyReport.disabled = isLoading;
+        setStatus(message);
+      }
+
+      function nextPaint() {
+        return new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            setTimeout(resolve, 0);
+          });
+        });
       }
     </script>
   </body>
