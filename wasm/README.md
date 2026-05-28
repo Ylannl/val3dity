@@ -59,9 +59,21 @@ Then open `http://localhost:8000/demo.html`.
 
 ## Caveats
 
-The wasm reports can differ from reports produced by the native `val3dity` executable. The current wasm build disables CGAL GMP support with `CGAL_DISABLE_GMP=ON`, while the native executable can use CGAL's exact-number stack. Some validation steps depend on best-fit-plane projection and constrained triangulation, so borderline geometries can produce different results. In practice this can show up as extra `999` errors such as `face does not have an outer boundary`, or as different `204` `NON_PLANAR_POLYGON_NORMALS_DEVIATION` counts because failed triangulation can prevent the later normals-deviation check from running.
+The wasm reports can differ from reports produced by the native `val3dity` executable. Some validation steps depend on best-fit-plane projection, constrained triangulation and CGAL polygon-mesh predicates, so borderline geometries can produce different results.
 
-GMP/MPFR are not impossible on wasm, but they are not part of this build. They would need to be cross-compiled with Emscripten as wasm static libraries, usually with generic C / disabled assembly paths, then CGAL would need to be configured to find those wasm headers and libraries and `CGAL_DISABLE_GMP=ON` would need to be removed. Expect a larger wasm artifact and slower exact-number operations. CGAL's Boost.Multiprecision backend may also be worth testing as an alternative, but it should be treated as a separate validation target rather than assumed equivalent to native GMP/MPFR.
+Known local findings:
+
+- `Ingolstadt.city.json` (Cityjson.org example dataset): native reports `102`, `104` and `204` errors only. The wasm builds tested also report `999` errors such as `face does not have an outer boundary`, and can report fewer `204` `NON_PLANAR_POLYGON_NORMALS_DEVIATION` errors because failed triangulation prevents later checks from running.
+- `10-434-716.city.jsonl` (3DBAG): native reports 24 `306` self-intersection errors, while wasm reports 2205 `306` errors and one `999`. For one inspected object, native and wasm built the same triangle mesh, but `CGAL::Polygon_mesh_processing::self_intersections()` reported extra intersecting triangle pairs only in wasm. The reported `306` location is the centroid of a flagged triangle, not the exact intersection point, so it can look displaced from the apparent intersection.
+
+GMP/MPFR are not impossible on wasm, but they are not part of this build. They can be cross-compiled with Emscripten as wasm static libraries using generic C / disabled assembly paths, and GMP can also be built with `--enable-cxx` to provide `libgmpxx.a`. CGAL can then be configured to find those wasm headers and libraries, remove `CGAL_DISABLE_GMP=ON`, and select either `GMP_BACKEND` or `GMPXX_BACKEND`. Expect a larger wasm artifact and slower exact-number operations.
+
+The current discrepancies do not appear to be explained only by GMP being absent. Local tests showed:
+
+- native default, native `CGAL_DISABLE_GMP=ON`, and native `CGAL_CMAKE_EXACT_NT_BACKEND=BOOST_BACKEND` produced the same reports for the two samples above;
+- wasm `GMP_BACKEND`, wasm `GMPXX_BACKEND`, wasm `BOOST_BACKEND`, and wasm with `-frounding-math` still reproduced the observed wasm discrepancies.
+
+The remaining suspect is wasm/Emscripten-specific behaviour in CGAL's geometry predicates or triangulation/intersection paths, rather than a simple GMP-vs-no-GMP difference.
 
 Also be careful when reusing one wasm module for many validations in the same page. Some CityJSON parsing state is process-global in the native code path, so repeated validations in a long-lived wasm instance may differ from running the CLI once per file in a fresh process.
 
