@@ -57,6 +57,14 @@ python3 -m http.server -d build-wasm 8000
 
 Then open `http://localhost:8000/demo.html`.
 
+## Caveats
+
+The wasm reports can differ from reports produced by the native `val3dity` executable. The current wasm build disables CGAL GMP support with `CGAL_DISABLE_GMP=ON`, while the native executable can use CGAL's exact-number stack. Some validation steps depend on best-fit-plane projection and constrained triangulation, so borderline geometries can produce different results. In practice this can show up as extra `999` errors such as `face does not have an outer boundary`, or as different `204` `NON_PLANAR_POLYGON_NORMALS_DEVIATION` counts because failed triangulation can prevent the later normals-deviation check from running.
+
+GMP/MPFR are not impossible on wasm, but they are not part of this build. They would need to be cross-compiled with Emscripten as wasm static libraries, usually with generic C / disabled assembly paths, then CGAL would need to be configured to find those wasm headers and libraries and `CGAL_DISABLE_GMP=ON` would need to be removed. Expect a larger wasm artifact and slower exact-number operations. CGAL's Boost.Multiprecision backend may also be worth testing as an alternative, but it should be treated as a separate validation target rather than assumed equivalent to native GMP/MPFR.
+
+Also be careful when reusing one wasm module for many validations in the same page. Some CityJSON parsing state is process-global in the native code path, so repeated validations in a long-lived wasm instance may differ from running the CLI once per file in a fresh process.
+
 Supported options:
 
 - `tolSnap` or `tol_snap`
